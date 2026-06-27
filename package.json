@@ -9,6 +9,7 @@
     "dev": "pnpm --filter @premon/server dev",
     "dev:server": "pnpm --filter @premon/server dev",
     "typecheck": "pnpm -r --parallel typecheck",
-    "test": "pnpm --filter @premon/server test"
+    "test": "pnpm --filter @premon/server test",
+    "vercel-build": "pnpm --filter @premon/guard build && pnpm --filter @premon/wallet-adapter build && pnpm --filter @premon/ui build && VITE_ANALYZE_URL=/api VITE_WALLET_URL=https://premon.vercel.app/wallet pnpm --filter @premon/showcase build && WALLET_BASE=/wallet/ VITE_ANALYZE_URL=/api pnpm --filter @premon/wallet build && rm -rf apps/showcase/dist/wallet && cp -r apps/wallet/dist apps/showcase/dist/wallet"
   }
 }
