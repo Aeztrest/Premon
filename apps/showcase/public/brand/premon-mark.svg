@@ -1,0 +1,8 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Premon">
+  <rect width="256" height="256" rx="56" fill="#141414"/>
+  <!-- foresight eye: the firewall sees the transaction before you sign -->
+  <path d="M48 128c24-37.6 56-56 80-56s56 18.4 80 56c-24 37.6-56 56-80 56s-56-18.4-80-56Z" fill="#FFFFFF"/>
+  <circle cx="128" cy="128" r="34" fill="#836EF9"/>
+  <circle cx="128" cy="128" r="13" fill="#141414"/>
+  <circle cx="139" cy="117" r="6" fill="#FFFFFF" opacity="0.9"/>
+</svg>

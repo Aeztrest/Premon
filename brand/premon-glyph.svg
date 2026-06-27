@@ -1,0 +1,5 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Premon glyph">
+  <!-- Transparent eye glyph (Monad purple). Use on its own where a tile isn't wanted. -->
+  <path d="M24 128c30-46 70-68 104-68s74 22 104 68c-30 46-70 68-104 68S54 174 24 128Z" stroke="#836EF9" stroke-width="16" stroke-linejoin="round" fill="none"/>
+  <circle cx="128" cy="128" r="30" fill="#836EF9"/>
+</svg>
