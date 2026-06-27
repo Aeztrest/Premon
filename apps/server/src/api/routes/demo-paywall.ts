@@ -8,10 +8,11 @@ import type { RouteDeps } from "./types.js";
  * to `payTo` and replays the tx hash in `X-PAYMENT`, then gets the answer.
  */
 
-// Demo merchant (valid checksummed EOA, no code → safe ERC-20 recipient).
+// Demo merchant (valid checksummed EOA).
 const DEMO_PAYTO = "0x5CA1Ab1e0000000000000000000000000000c0de";
-// 0.001 USDC at 6 decimals.
-const DEMO_AMOUNT_ATOMIC = "1000";
+// 0.001 MON per question, in wei (native payment → an agent session key can
+// auto-pay every call without a per-payment popup).
+const DEMO_AMOUNT_WEI = "1000000000000000";
 
 const ANSWERS: Record<string, string> = {
   "what is liquid staking?":
@@ -37,7 +38,6 @@ export function registerDemoPaywallRoute(app: FastifyInstance, deps: RouteDeps):
     const paymentHeader = req.headers["x-payment"];
 
     const payTo = cfg.x402.payTo || DEMO_PAYTO;
-    const asset = cfg.monad.usdcAddress;
 
     // No payment yet → issue the 402 challenge with PaymentRequirements.
     if (typeof paymentHeader !== "string" || paymentHeader.length === 0) {
@@ -48,15 +48,21 @@ export function registerDemoPaywallRoute(app: FastifyInstance, deps: RouteDeps):
           {
             scheme: "exact",
             network: cfg.x402.network, // eip155:<chainId>
-            asset,
+            /** "native" → pay in native MON (agent session can auto-settle). */
+            asset: "native",
             payTo,
-            /** Atomic units (USDC 6 decimals). */
-            maxAmountRequired: DEMO_AMOUNT_ATOMIC,
+            /** Wei (native MON). */
+            maxAmountRequired: DEMO_AMOUNT_WEI,
             resource: "/demo/scrybe",
             description: "Scrybe pay-per-question answer",
             mimeType: "application/json",
             maxTimeoutSeconds: 120,
-            extra: { chainId: cfg.monad.chainId, decimals: cfg.monad.usdcDecimals, priceLabel: "$0.001" },
+            extra: {
+              chainId: cfg.monad.chainId,
+              symbol: cfg.monad.nativeSymbol,
+              decimals: cfg.monad.nativeDecimals,
+              priceLabel: "0.001 MON",
+            },
           },
         ],
       });
@@ -78,9 +84,9 @@ export function registerDemoPaywallRoute(app: FastifyInstance, deps: RouteDeps):
       answer: scrybeAnswer(q),
       paidWith: "x402",
       network: cfg.x402.network,
-      asset,
+      asset: "native",
       payTo,
-      amount: DEMO_AMOUNT_ATOMIC,
+      amount: DEMO_AMOUNT_WEI,
       txHash,
       from,
     });

@@ -1,78 +1,45 @@
 /**
- * x402 payment client — Monad / EVM build (simplified).
+ * x402 payment helpers — Monad / EVM, native-MON agentic build.
  *
- * EVM x402 (the protocol's native habitat) advertises an `eip155:<chainId>`
- * network and an ERC-20 (USDC) `asset`. For the showcase we keep the payment
- * leg simple: build the USDC `transfer(payTo, amount)` call, have the wallet
- * sign it (Premon runs its pre-sign analysis + policy here), and ship the signed
- * transaction back to the merchant in the `X-PAYMENT` header. The merchant's
- * facilitator is responsible for settlement.
+ * The server advertises an `eip155:<chainId>` network and (in this demo) a
+ * native MON `asset`. The agent session pays the `maxAmountRequired` (wei) to
+ * `payTo`, then ships the on-chain tx hash back in the `X-PAYMENT` header.
  */
 
-import { Interface, parseUnits } from "ethers";
-import type { TxRequest } from "@premon/wallet-adapter";
-
-/** Mirrors the server's x402 PaymentRequirements (EVM/USDC on Monad). */
+/** Mirrors the server's x402 PaymentRequirements. */
 export interface PaymentRequirements {
   scheme: string;
   /** `eip155:<chainId>` network id. */
   network: string;
-  /** Price string, e.g. "$0.001". */
+  /** `"native"` for MON, or an ERC-20 token address. */
+  asset: string;
+  /** Recipient of the payment (0x). */
+  payTo: string;
+  /** Amount in wei (native) / atomic units, as a plain integer string. */
   maxAmountRequired: string;
   resource: string;
   description: string;
   mimeType: string;
-  /** ERC-20 token contract used for payment (USDC, 0x). */
-  asset: string;
-  /** Recipient of the payment (0x). */
-  payTo: string;
   maxTimeoutSeconds: number;
   extra: {
     chainId?: number;
     decimals?: number;
+    symbol?: string;
+    priceLabel?: string;
     [k: string]: unknown;
   };
 }
 
-const ERC20 = new Interface([
-  "function transfer(address to, uint256 amount)",
-]);
-
-const MONAD_CHAIN_ID = 10143;
-const DEFAULT_USDC_DECIMALS = 6;
-
-/** Convert a "$0.001"-style price string to atomic token units. */
-export function priceToAtomic(price: string, decimals: number): bigint {
-  const clean = price.replace(/[^0-9.]/g, "") || "0";
-  return parseUnits(clean, decimals);
+/** Payment amount in wei (native) / atomic units. */
+export function requiredAmount(requirements: PaymentRequirements): bigint {
+  try {
+    return BigInt(requirements.maxAmountRequired);
+  } catch {
+    return 0n;
+  }
 }
 
-/** Resolve the payment amount in atomic units from the requirements. */
-function requiredAtomic(requirements: PaymentRequirements): bigint {
-  const v = requirements.maxAmountRequired.trim();
-  // Server now sends atomic units (a plain integer string); fall back to a
-  // "$0.001"-style price for older servers.
-  if (/^[0-9]+$/.test(v)) return BigInt(v);
-  const decimals = Number(requirements.extra?.decimals ?? DEFAULT_USDC_DECIMALS);
-  return priceToAtomic(v, decimals);
-}
-
-/** Build the unsigned EVM USDC-transfer tx that satisfies the 402. */
-export function buildX402PaymentTx(
-  from: string,
-  requirements: PaymentRequirements,
-): TxRequest {
-  const amount = requiredAtomic(requirements);
-  return {
-    from,
-    to: requirements.asset,
-    data: ERC20.encodeFunctionData("transfer", [requirements.payTo, amount]),
-    value: "0",
-    chainId: Number(requirements.extra?.chainId ?? MONAD_CHAIN_ID),
-  };
-}
-
-/** Base64-encode the `X-PAYMENT` header value from the broadcast payment tx. */
+/** Base64-encode the `X-PAYMENT` header from the broadcast payment tx. */
 export function encodePaymentHeader(
   txHash: string,
   from: string,
@@ -87,7 +54,7 @@ export function encodePaymentHeader(
       from,
       asset: requirements.asset,
       payTo: requirements.payTo,
-      amount: requiredAtomic(requirements).toString(),
+      amount: requirements.maxAmountRequired,
     },
   };
   return btoa(JSON.stringify(payload));
