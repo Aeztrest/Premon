@@ -8,9 +8,10 @@
  *   3. Asset allowlist + facilitator allowlist + merchant origins.
  *   4. Look up / auto-create allowance for (origin, asset).
  *   5. Apply caps (per-tx, hourly, daily).
- *   6. Build the EIP-3009 authorization payment.
- *   7. Auto-approve in the background (default) or enqueue for popup review.
- *   8. Return the base64 `X-PAYMENT` header value.
+ *   6. Build a real on-chain USDC `transfer` transaction.
+ *   7. Auto-broadcast in the background (default) or route through the standard
+ *      eth_sendTransaction approval popup, which broadcasts on approve.
+ *   8. Return the base64 `X-PAYMENT` header carrying the on-chain tx hash.
  *   9. Increment the allowance ledger.
  */
 
@@ -19,6 +20,7 @@ import { BALANCED_POLICY, type GuardPolicy } from "@premon/guard";
 
 import { useWallet, isUnlocked } from "../crypto/session";
 import { getSnapshot, dispatch } from "../state/store";
+import { getProvider } from "../rpc/connection";
 import { chainFor } from "../../shared/chain";
 import {
   enqueue,
@@ -37,7 +39,7 @@ import {
   validateRequirements,
   type PaymentRequirements,
 } from "./parse";
-import { buildX402Payment, signX402Payment } from "./build";
+import { buildX402TransferTx, encodeX402Header } from "./build";
 import { appendHistory } from "../db/history";
 
 const POLICY_STORAGE_KEY = "premon.policy.v1";
@@ -59,7 +61,7 @@ interface DeclinedDecision {
 type Decision = ApprovedDecision | DeclinedDecision;
 
 export async function x402Review(rawReq: unknown): Promise<Decision> {
-  const { origin, requestUrl, requirements } = rawReq as ReviewRequest;
+  const { origin, requirements } = rawReq as ReviewRequest;
 
   if (!isUnlocked())
     return { action: "decline", reason: "Premon wallet is locked." };
@@ -167,17 +169,21 @@ export async function x402Review(rawReq: unknown): Promise<Decision> {
     };
   }
 
-  // 6. Build the payment authorization.
-  const built = buildX402Payment(snap.address, requirements, chain);
-
-  // 7. Sign. Caps already enforced the firewall, so by default we AUTO-APPROVE
-  // in the background. Set `x402AutoApprove: false` (Strict) to confirm each.
+  // 6. Build the on-chain USDC transfer. We BROADCAST a real ERC-20 transfer
+  //    (not an off-chain EIP-3009 authorization) so the USDC actually moves and
+  //    the wallet balance visibly decreases.
   const payTo = requirements.payTo;
-  let headerValue: string;
+  const amountUiStr = amountUi.toFixed(6);
+  let txHash: string;
+
+  // 7. Caps already enforced the firewall, so by default we AUTO-APPROVE and
+  //    broadcast in the background. Set `x402AutoApprove: false` (Strict) to
+  //    confirm each payment via the standard approval popup before broadcast.
   if (policy.x402AutoApprove !== false) {
     try {
-      const signer = useWallet();
-      headerValue = await signX402Payment(signer, built);
+      const signer = useWallet().connect(getProvider());
+      const resp = await signer.sendTransaction(buildX402TransferTx(requirements));
+      txHash = resp.hash;
     } catch (err) {
       return {
         action: "decline",
@@ -186,22 +192,51 @@ export async function x402Review(rawReq: unknown): Promise<Decision> {
     }
     await appendHistory({
       type: "x402",
-      txHash: null,
+      txHash,
       origin,
-      summary: `Auto-paid x402 · ${amountUi.toFixed(6)} → ${payTo.slice(0, 6)}…${payTo.slice(-4)}`,
+      summary: `Auto-paid x402 · ${amountUiStr} USDC → ${payTo.slice(0, 6)}…${payTo.slice(-4)}`,
       decision: "allow",
-      reasons: ["Within policy caps — auto-approved"],
-      broadcast: false,
+      reasons: ["Within caps — auto-approved"],
+      broadcast: true,
       createdAt: Date.now(),
     });
   } else {
-    const label = `x402 payment · ${amountUi.toFixed(6)} → ${payTo.slice(0, 6)}…${payTo.slice(-4)}`;
-    const result = await enqueueAndWait(origin, built, requestUrl, label);
-    if (result.kind !== "x402Payment" || !result.headerValue) {
-      return { action: "decline", reason: "Sign request did not return a signed payment." };
+    // Manual: route through the SAME approval + broadcast mechanism that the
+    // provider's eth_sendTransaction uses. The popup shows Premon analysis of
+    // the USDC transfer; on approve it broadcasts and returns the tx hash.
+    const label = `x402 payment · ${amountUiStr} USDC → ${payTo.slice(0, 6)}…${payTo.slice(-4)}`;
+    let result: SignSuccess;
+    try {
+      result = await enqueueAndWait(origin, requirements, label);
+    } catch (err) {
+      return {
+        action: "decline",
+        reason:
+          err instanceof Error ? err.message : "You declined the x402 payment.",
+      };
     }
-    headerValue = result.headerValue;
+    if (result.kind !== "transactionAndSend" || !result.txHash) {
+      return { action: "decline", reason: "You declined the x402 payment." };
+    }
+    txHash = result.txHash;
+    await appendHistory({
+      type: "x402",
+      txHash,
+      origin,
+      summary: `Paid x402 · ${amountUiStr} USDC → ${payTo.slice(0, 6)}…${payTo.slice(-4)}`,
+      decision: "allow",
+      reasons: ["Approved at popup"],
+      broadcast: true,
+      createdAt: Date.now(),
+    });
   }
+
+  const headerValue = encodeX402Header({
+    network,
+    txHash,
+    from: snap.address,
+    requirements,
+  });
 
   // 8 + 9. Record the hit (optimistic — drift catches non-settlement).
   await recordHit(allowanceId, amountUi);
@@ -213,17 +248,20 @@ export async function x402Review(rawReq: unknown): Promise<Decision> {
 
 function enqueueAndWait(
   origin: string,
-  built: ReturnType<typeof buildX402Payment>,
-  requestUrl: string,
+  requirements: PaymentRequirements,
   label: string,
 ): Promise<SignSuccess> {
+  // Reuse the eth_sendTransaction infra: a "transactionAndSend" sign request
+  // shows the standard approval popup (with Premon analysis), then broadcasts
+  // and resolves with the on-chain tx hash.
+  const tx = buildX402TransferTx(requirements);
   return new Promise<SignSuccess>((resolve, reject) => {
     const requestId = newRequestId();
     enqueue({
       requestId,
-      kind: "x402Payment",
+      kind: "transactionAndSend",
       origin,
-      payload: JSON.stringify({ built, requestUrl }),
+      payload: JSON.stringify(tx),
       label,
       resolve,
       reject,

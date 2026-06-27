@@ -1,48 +1,30 @@
 /**
  * Scrybe — pay-per-question oracle, x402 over Monad testnet.
  *
- * This is Premon's flagship demo. The user types a question, the merchant server
- * responds HTTP 402 with PaymentRequirements, this page builds the matching
- * USDC transfer transaction, the connected wallet signs it (Premon runs pre-sign
- * analysis + policy here), the signed payload is replayed to the merchant in the
- * X-PAYMENT header, and the answer comes back.
+ * This is Premon's flagship demo. The page itself pays nothing: it just does a
+ * plain `fetch` to the merchant. The merchant answers HTTP 402 with x402
+ * PaymentRequirements, and the Premon BROWSER EXTENSION's x402 layer transparently
+ * intercepts it, pays real USDC on-chain (under the user's x402 caps / auto-approve
+ * setting), and retries with the `X-PAYMENT` header — so a successful fetch comes
+ * back as a normal 200 with the answer.
  *
- * The page hides the protocol details behind a "How it works" disclosure so
- * non-technical visitors see one clean CTA: "Pay $0.001 → Ask".
+ * No session keys, no native MON, no dApp-side signing. Connecting a wallet is
+ * optional: the extension pays from its own wallet regardless.
  */
 
-import { useState, useEffect, useCallback, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { formatEther } from "ethers";
 import {
   ArrowLeft, Sparkles, ShieldCheck, AlertTriangle,
-  Loader2, Zap, ChevronDown, Lock, Bot,
+  Loader2, Zap, ChevronDown, Lock, ShieldQuestion,
 } from "lucide-react";
 import { useWallet } from "../../wallet/context";
-import {
-  requiredAmount,
-  encodePaymentHeader,
-  type PaymentRequirements,
-} from "./build-x402";
-import {
-  getOrCreateSession,
-  sessionBalanceWei,
-  canCover,
-  payFromSession,
-  waitForFunding,
-  topUpWei,
-  TOPUP_MON,
-  type ScrybeSession,
-} from "./session";
 
 type Phase =
-  | "asking"          // sent first fetch
-  | "paywalled"       // got 402
-  | "funding"         // funding the agent session (one-time approval)
-  | "signing"         // agent paying (auto)
-  | "settling"        // proof sent back to server
-  | "answered"        // 200 + proof
+  | "asking"     // sent the fetch — extension may be settling x402 transparently
+  | "answered"   // 200 + answer
+  | "declined"   // 402 — extension didn't pay
   | "error";
 
 interface AnswerEntry {
@@ -50,10 +32,8 @@ interface AnswerEntry {
   question: string;
   phase: Phase;
   answer?: string;
-  payer?: string;
   network?: string;
   txHash?: string;
-  paywall?: PaymentRequirements;
   error?: string;
   startedAt: number;
   finishedAt?: number;
@@ -66,121 +46,61 @@ const SUGGESTIONS = [
   "Explain USDC on Monad",
 ];
 
+const DECLINE_MESSAGE =
+  "Premon didn't authorize this payment — install/unlock the extension, or check your x402 settings (auto-approve + caps) in the wallet.";
+
 export default function Scrybe() {
-  const { connected, walletAddress, shortAddress, openWalletModal, adapter, disconnect } = useWallet();
+  const { connected, shortAddress, openWalletModal, disconnect } = useWallet();
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<AnswerEntry[]>([]);
   const [pending, setPending] = useState(false);
-  const [pendingQ, setPendingQ] = useState<string | null>(null);
-
-  // Agentic x402 session: an ephemeral key the user funds ONCE, then it
-  // auto-pays every question with no popup.
-  const [session] = useState<ScrybeSession>(() => getOrCreateSession());
-  const [sessionBal, setSessionBal] = useState<bigint>(0n);
-  const refreshSessionBal = useCallback(async () => {
-    try {
-      setSessionBal(await sessionBalanceWei(session.address));
-    } catch {
-      /* ignore */
-    }
-  }, [session.address]);
-  useEffect(() => {
-    void refreshSessionBal();
-  }, [refreshSessionBal]);
-
-  // If the user submitted a question without being connected, run it once
-  // they finish picking a wallet.
-  useEffect(() => {
-    if (connected && walletAddress && pendingQ) {
-      const q = pendingQ;
-      setPendingQ(null);
-      void runPayment(q);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, walletAddress, pendingQ]);
 
   async function submit(q: string) {
     const trimmed = q.trim();
     if (!trimmed || pending) return;
-    if (!connected || !walletAddress) {
-      setPendingQ(trimmed);
-      openWalletModal();
-      return;
-    }
-    void runPayment(trimmed);
+    void runQuestion(trimmed);
   }
 
-  async function runPayment(q: string) {
+  async function runQuestion(q: string) {
     setPending(true);
     setQuestion("");
     const entryId = `ask-${Date.now()}`;
     const entry: AnswerEntry = { id: entryId, question: q, phase: "asking", startedAt: Date.now() };
     setHistory((prev) => [...prev, entry]);
     const update = (patch: Partial<AnswerEntry>) =>
-      setHistory((prev) => prev.map((e) => e.id === entryId ? { ...e, ...patch } : e));
+      setHistory((prev) => prev.map((e) => (e.id === entryId ? { ...e, ...patch } : e)));
 
     try {
-      // 1. 402 challenge
-      const initial = await fetch(`/api/demo/scrybe?q=${encodeURIComponent(q)}`, {
+      // Plain fetch. If the Premon extension is installed + within caps, it pays
+      // real USDC on-chain and transparently retries — so we just see a 200.
+      const res = await fetch(`/api/demo/scrybe?q=${encodeURIComponent(q)}`, {
         headers: { accept: "application/json" },
       });
-      if (initial.status === 200) {
-        const body = await initial.json().catch(() => ({}));
-        update({ phase: "answered", answer: body.answer, network: body.network, finishedAt: Date.now() });
-        return;
-      }
-      if (initial.status !== 402) {
-        const body = await initial.json().catch(() => ({}));
-        throw new Error(body.error ?? `Server returned ${initial.status}`);
-      }
-      const paywallBody = await initial.json();
-      const requirements: PaymentRequirements = paywallBody.accepts?.[0];
-      if (!requirements) throw new Error("Server didn't return PaymentRequirements.");
-      update({ phase: "paywalled", paywall: requirements });
 
-      const amount = requiredAmount(requirements);
-
-      // 2. Fund the agent ONCE if it can't cover this payment. This is the only
-      // step that opens the wallet — every subsequent question skips it.
-      let bal = await sessionBalanceWei(session.address);
-      if (!canCover(bal, amount)) {
-        update({ phase: "funding" });
-        const { signature: fundHash } = await adapter.signAndSendTransaction({
-          to: session.address,
-          value: topUpWei().toString(),
-        });
-        await waitForFunding(fundHash);
-        bal = await sessionBalanceWei(session.address);
-        void refreshSessionBal();
-      }
-
-      // 3. Agent pays automatically — signed + broadcast locally, NO popup.
-      update({ phase: "signing" });
-      const txHash = await payFromSession(session, requirements.payTo, amount);
-      const headerValue = encodePaymentHeader(txHash, session.address, requirements);
-
-      // 4. Settle: replay with the on-chain proof.
-      update({ phase: "settling", txHash });
-      const settled = await fetch(`/api/demo/scrybe?q=${encodeURIComponent(q)}`, {
-        headers: { accept: "application/json", "x-payment": headerValue },
-      });
-      const body = await settled.json().catch(() => ({}));
-      if (settled.status === 200) {
+      if (res.status === 200) {
+        const body = await res.json().catch(() => ({}));
         update({
           phase: "answered",
           answer: body.answer ?? "(empty answer)",
-          payer: session.address,
-          network: body.network ?? requirements.network,
-          txHash: body.txHash ?? txHash,
+          network: body.network,
+          txHash: body.txHash ?? undefined,
           finishedAt: Date.now(),
         });
-        void refreshSessionBal();
-      } else {
-        throw new Error(body.detail || body.error || `Settle failed (${settled.status})`);
+        return;
       }
+
+      if (res.status === 402) {
+        // The extension didn't pay: not installed, locked, paused/revoked,
+        // over cap, or the user declined the approval popup.
+        update({ phase: "declined", error: DECLINE_MESSAGE, finishedAt: Date.now() });
+        return;
+      }
+
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? `Server returned ${res.status}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      update({ phase: "error", error: friendlyError(msg), finishedAt: Date.now() });
+      update({ phase: "error", error: msg, finishedAt: Date.now() });
     } finally {
       setPending(false);
     }
@@ -223,17 +143,14 @@ export default function Scrybe() {
                 onClick={openWalletModal}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium bg-bone text-ink-900/70 border border-ink-900/12 hover:bg-ink-900/[0.04]"
               >
-                <Lock size={10} /> Connect wallet
+                <Lock size={10} /> Connect (optional)
               </button>
             )}
-            <span
-              title={`Agent session ${session.address}`}
-              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-medium bg-brand-50 text-brand-700 border border-brand-500/20"
-            >
-              <Bot size={10} /> {Number(formatEther(sessionBal)).toFixed(3)} MON
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-medium bg-brand-50 text-brand-700 border border-brand-500/20">
+              <ShieldCheck size={10} /> Premon x402
             </span>
             <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono font-medium bg-bone text-ink-900/60 border border-ink-900/10">
-              0.001 MON/q
+              $0.001/q
             </span>
           </div>
         </div>
@@ -244,13 +161,16 @@ export default function Scrybe() {
           <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-7">
             <div>
               <h2 className="font-display text-4xl sm:text-5xl font-black tracking-tight leading-[1.05]">
-                Fund once.<br />
-                <span className="text-brand-500">Ask freely.</span>
+                Just ask.<br />
+                <span className="text-brand-500">Premon pays.</span>
               </h2>
               <p className="text-ink-900/55 mt-3 leading-relaxed max-w-xl">
-                Pay-per-question oracle over HTTP&nbsp;402 on Monad testnet. Fund the
-                agent once — then every question auto-pays 0.001&nbsp;MON from its
-                budget, no popup, settled on-chain.
+                Pay-per-question oracle over HTTP&nbsp;402 on Monad testnet. Each
+                question costs 0.001&nbsp;USDC — but you never sign anything here.
+                The Premon EXTENSION settles the x402 payment on-chain
+                automatically, under your x402 caps. Flip <strong>x402
+                auto-approve</strong> off in the wallet's Policies and the
+                extension asks you to approve each payment instead.
               </p>
             </div>
 
@@ -295,7 +215,7 @@ export default function Scrybe() {
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder={connected ? "Ask Scrybe a question…" : "Connect a wallet first, then ask…"}
+            placeholder="Ask Scrybe a question…"
             disabled={pending}
             className="flex-1 px-4 py-3 rounded-xl bg-bone border border-ink-900/12 text-ink-900 outline-none focus:border-brand-500/50 focus:bg-paper transition-all placeholder:text-ink-900/35 disabled:opacity-60"
           />
@@ -304,9 +224,7 @@ export default function Scrybe() {
             disabled={pending || !question.trim()}
             className="px-4 py-3 rounded-xl text-sm font-semibold disabled:opacity-30 transition-all flex items-center gap-2 text-white bg-ink-900 hover:bg-ink-800"
           >
-            {connected
-              ? <><Zap size={13} className="text-brand-500" /> Ask · auto-pay</>
-              : <><Lock size={13} /> Connect · Ask</>}
+            <Zap size={13} className="text-brand-500" /> Ask
           </button>
         </div>
       </form>
@@ -324,9 +242,7 @@ function ConversationEntry({ entry }: { entry: AnswerEntry }) {
         <div className="w-7 h-7 rounded-full bg-ink-900/8 flex items-center justify-center text-[10px] text-ink-900/55 shrink-0">you</div>
       </div>
 
-      {entry.phase !== "answered" && entry.phase !== "error" && (
-        <ProgressStep entry={entry} />
-      )}
+      {entry.phase === "asking" && <ProgressStep entry={entry} />}
 
       {entry.answer && (
         <div className="flex items-start gap-3">
@@ -335,15 +251,19 @@ function ConversationEntry({ entry }: { entry: AnswerEntry }) {
           </div>
           <div className="flex-1">
             <p className="rounded-2xl rounded-tl-sm bg-bone text-ink-900 px-4 py-2.5 leading-relaxed">{entry.answer}</p>
-            {entry.payer && (
-              <SettlementReceipt
-                payer={entry.payer}
-                network={entry.network}
-                txHash={entry.txHash}
-                elapsedMs={(entry.finishedAt ?? Date.now()) - entry.startedAt}
-              />
-            )}
+            <SettlementReceipt
+              network={entry.network}
+              txHash={entry.txHash}
+              elapsedMs={(entry.finishedAt ?? Date.now()) - entry.startedAt}
+            />
           </div>
+        </div>
+      )}
+
+      {entry.phase === "declined" && (
+        <div className="ml-10 flex items-start gap-2 text-sm rounded-lg p-3 bg-bone border border-ink-900/12">
+          <ShieldQuestion size={14} className="mt-0.5 shrink-0 text-ink-900/55" />
+          <span className="text-ink-900/70">{entry.error}</span>
         </div>
       )}
 
@@ -358,15 +278,15 @@ function ConversationEntry({ entry }: { entry: AnswerEntry }) {
   );
 }
 
-function ProgressStep({ entry }: { entry: AnswerEntry }) {
-  const PHASES: Array<{ key: Phase; label: string }> = [
-    { key: "asking",    label: "Asking the oracle" },
-    { key: "paywalled", label: "402 — payment required" },
-    { key: "funding",   label: "Funding agent (one-time, only if low)" },
-    { key: "signing",   label: "Agent paying — no popup" },
-    { key: "settling",  label: "Settling on Monad" },
+function ProgressStep({ entry: _entry }: { entry: AnswerEntry }) {
+  const PHASES = [
+    { key: "ask",    label: "Asking" },
+    { key: "settle", label: "Premon settling x402" },
+    { key: "answer", label: "Answered" },
   ];
-  const idx = PHASES.findIndex((p) => p.key === entry.phase);
+  // Everything happens inside one transparent fetch, so we surface the middle
+  // step as the active one while we wait.
+  const idx = 1;
 
   return (
     <div className="ml-10 rounded-lg p-3 space-y-1.5 bg-bone border border-ink-900/10">
@@ -396,8 +316,8 @@ function ProgressStep({ entry }: { entry: AnswerEntry }) {
   );
 }
 
-function SettlementReceipt({ payer, network, txHash, elapsedMs }: {
-  payer?: string; network?: string; txHash?: string; elapsedMs: number;
+function SettlementReceipt({ network, txHash, elapsedMs }: {
+  network?: string; txHash?: string; elapsedMs: number;
 }) {
   const explorerTx = txHash
     ? `https://testnet.monadexplorer.com/tx/${txHash}`
@@ -407,14 +327,9 @@ function SettlementReceipt({ payer, network, txHash, elapsedMs }: {
       <ShieldCheck size={14} className="text-emerald-600 mt-0.5 shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-emerald-700 font-medium mb-1">
-          Paid via x402 · {network ?? "monad"} · {(elapsedMs / 1000).toFixed(1)}s
+          Paid via Premon x402 · {network ?? "monad"} · {(elapsedMs / 1000).toFixed(1)}s
         </p>
-        {payer && (
-          <p className="text-[10px] text-ink-900/40 mt-1 font-mono break-all">
-            from {payer.slice(0, 10)}…{payer.slice(-6)}
-          </p>
-        )}
-        {explorerTx && (
+        {explorerTx ? (
           <a
             href={explorerTx}
             target="_blank"
@@ -423,6 +338,10 @@ function SettlementReceipt({ payer, network, txHash, elapsedMs }: {
           >
             tx {txHash!.slice(0, 12)}… ↗
           </a>
+        ) : (
+          <p className="text-[10px] text-ink-900/40 mt-1">
+            Settled on-chain by the extension under your x402 caps.
+          </p>
         )}
       </div>
     </div>
@@ -443,10 +362,10 @@ function HowItWorksDisclosure() {
       {open && (
         <div className="px-4 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           {[
-            { n: "01", t: "Fund",   b: "Fund the agent once" },
-            { n: "02", t: "402",    b: "Server demands 0.001 MON" },
-            { n: "03", t: "Agent",  b: "Agent auto-pays — no popup" },
-            { n: "04", t: "Settle", b: "Tx settles on Monad" },
+            { n: "01", t: "Ask",     b: "Page does a plain fetch" },
+            { n: "02", t: "402",     b: "Server demands 0.001 USDC" },
+            { n: "03", t: "Premon",  b: "Extension pays USDC on-chain" },
+            { n: "04", t: "Answer",  b: "Retried fetch returns 200" },
           ].map((s) => (
             <div key={s.n} className="rounded-lg p-2.5 bg-bone border border-ink-900/8">
               <p className="text-[9px] text-brand-700 font-mono">{s.n}</p>
@@ -458,18 +377,4 @@ function HowItWorksDisclosure() {
       )}
     </div>
   );
-}
-
-function friendlyError(msg: string): string {
-  const m = msg.toLowerCase();
-  if (m.includes("insufficient") || m.includes("funds")) {
-    return "Not enough testnet MON to fund the agent or pay. Grab MON from the faucet and retry.";
-  }
-  if (m.includes("user rejected") || m.includes("rejected") || m.includes("declined")) {
-    return "You declined the signature. No money moved.";
-  }
-  if (m.includes("no_sign_transaction") || m.includes("can't sign without broadcasting")) {
-    return "This wallet can't sign without broadcasting. Reconnect with Premon for x402 payments.";
-  }
-  return msg;
 }

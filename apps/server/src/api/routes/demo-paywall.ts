@@ -4,15 +4,16 @@ import type { RouteDeps } from "./types.js";
 /**
  * x402 demo paywall (Scrybe). Always issues the HTTP 402 challenge when no
  * `X-PAYMENT` header is present — independent of X402_ENABLED, since this is a
- * self-contained demo: the client pays by sending a real on-chain USDC transfer
- * to `payTo` and replays the tx hash in `X-PAYMENT`, then gets the answer.
+ * self-contained demo: the Premon browser extension's x402 layer pays by
+ * broadcasting a real on-chain USDC transfer to `payTo` and replays the tx hash
+ * in `X-PAYMENT`, then gets the answer.
  */
 
 // Demo merchant (valid checksummed EOA).
 const DEMO_PAYTO = "0x5CA1Ab1e0000000000000000000000000000c0de";
-// 0.001 MON per question, in wei (native payment → an agent session key can
-// auto-pay every call without a per-payment popup).
-const DEMO_AMOUNT_WEI = "1000000000000000";
+// 0.001 USDC per question, in atomic units (6 decimals). The extension
+// interceptor's `extractRequirements` requires a string `amount` field.
+const DEMO_AMOUNT_ATOMIC = "1000";
 
 const ANSWERS: Record<string, string> = {
   "what is liquid staking?":
@@ -48,20 +49,19 @@ export function registerDemoPaywallRoute(app: FastifyInstance, deps: RouteDeps):
           {
             scheme: "exact",
             network: cfg.x402.network, // eip155:<chainId>
-            /** "native" → pay in native MON (agent session can auto-settle). */
-            asset: "native",
+            /** Real USDC ERC-20 contract (0x) — NOT "native". */
+            asset: cfg.monad.usdcAddress,
             payTo,
-            /** Wei (native MON). */
-            maxAmountRequired: DEMO_AMOUNT_WEI,
-            resource: "/demo/scrybe",
-            description: "Scrybe pay-per-question answer",
-            mimeType: "application/json",
+            /** Atomic USDC units (6 decimals); 1000 = 0.001 USDC. */
+            amount: DEMO_AMOUNT_ATOMIC,
+            maxAmountRequired: DEMO_AMOUNT_ATOMIC,
             maxTimeoutSeconds: 120,
             extra: {
               chainId: cfg.monad.chainId,
-              symbol: cfg.monad.nativeSymbol,
-              decimals: cfg.monad.nativeDecimals,
-              priceLabel: "0.001 MON",
+              decimals: cfg.monad.usdcDecimals,
+              name: "USD Coin",
+              version: "2",
+              priceLabel: "$0.001",
             },
           },
         ],
@@ -84,9 +84,9 @@ export function registerDemoPaywallRoute(app: FastifyInstance, deps: RouteDeps):
       answer: scrybeAnswer(q),
       paidWith: "x402",
       network: cfg.x402.network,
-      asset: "native",
+      asset: cfg.monad.usdcAddress,
       payTo,
-      amount: DEMO_AMOUNT_WEI,
+      amount: DEMO_AMOUNT_ATOMIC,
       txHash,
       from,
     });

@@ -8,7 +8,13 @@
  * the micropayment itself.
  */
 
-import { getAddress, hexlify, randomBytes } from "ethers";
+import {
+  getAddress,
+  hexlify,
+  Interface,
+  randomBytes,
+  type TransactionRequest,
+} from "ethers";
 import type { EvmSigner } from "../crypto/session";
 import type { ChainConfig } from "../../shared/chain";
 import { atomicToUi, type PaymentRequirements } from "./parse";
@@ -112,5 +118,61 @@ export async function signX402Payment(
     },
   };
 
+  return btoa(JSON.stringify(paymentPayload));
+}
+
+/* ────────────── Direct on-chain transfer (broadcast) path ────────────── */
+
+const ERC20_TRANSFER_IFACE = new Interface([
+  "function transfer(address to, uint256 value)",
+]);
+
+/**
+ * Build an ethers `TransactionRequest` that transfers `requirements.amount`
+ * atomic units of the ERC-20 `requirements.asset` to `requirements.payTo`.
+ *
+ * Unlike the EIP-3009 sign-only path, this is broadcast on-chain by the
+ * wallet, so the USDC actually moves and the balance visibly decreases. The
+ * resulting tx hash is the proof shipped back in the `X-PAYMENT` header.
+ *
+ * Returns only JSON-serializable fields (no bigint) so the request can be
+ * round-tripped through the sign queue payload for the manual-approval popup.
+ */
+export function buildX402TransferTx(
+  requirements: PaymentRequirements,
+): TransactionRequest {
+  const data = ERC20_TRANSFER_IFACE.encodeFunctionData("transfer", [
+    getAddress(requirements.payTo),
+    requirements.amount,
+  ]);
+  return {
+    to: getAddress(requirements.asset),
+    data,
+    value: 0,
+  };
+}
+
+/**
+ * Base64-encode the `X-PAYMENT` header carrying the on-chain transfer proof.
+ */
+export function encodeX402Header(args: {
+  network: string;
+  txHash: string;
+  from: string;
+  requirements: PaymentRequirements;
+}): string {
+  const { network, txHash, from, requirements } = args;
+  const paymentPayload = {
+    x402Version: 1,
+    scheme: "exact",
+    network,
+    payload: {
+      txHash,
+      from,
+      asset: requirements.asset,
+      payTo: requirements.payTo,
+      amount: requirements.amount,
+    },
+  };
   return btoa(JSON.stringify(paymentPayload));
 }
