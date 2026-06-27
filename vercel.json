@@ -2,10 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "installCommand": "pnpm install --frozen-lockfile --prod=false",
-  "buildCommand": "pnpm --filter @premon/guard build && pnpm --filter @premon/wallet-adapter build && VITE_ANALYZE_URL=/api pnpm --filter @premon/showcase build",
+  "buildCommand": "pnpm --filter @premon/guard build && pnpm --filter @premon/wallet-adapter build && pnpm --filter @premon/ui build && VITE_ANALYZE_URL=/api VITE_WALLET_URL=https://premon.vercel.app/wallet pnpm --filter @premon/showcase build && WALLET_BASE=/wallet/ VITE_ANALYZE_URL=/api pnpm --filter @premon/wallet build && cp -r apps/wallet/dist apps/showcase/dist/wallet",
   "outputDirectory": "apps/showcase/dist",
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://premon-api.onrender.com/:path*" },
+    { "source": "/wallet/:path*", "destination": "/wallet/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

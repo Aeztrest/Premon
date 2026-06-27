@@ -13,6 +13,11 @@ import { Sign } from "./pages/Sign";
 
 const POPUP_PATHS = new Set(["/connect", "/sign"]);
 
+// When served under a sub-path (e.g. /wallet on the showcase domain), Vite sets
+// BASE_URL to "/wallet/". React Router needs that as its basename (no trailing
+// slash). In dev BASE_URL is "/" → basename "/".
+const BASENAME = import.meta.env.BASE_URL.replace(/\/+$/, "") || "/";
+
 function RequireWallet({ children }: { children: React.ReactNode }) {
   const { phase } = useWallet();
   const loc = useLocation();
@@ -39,7 +44,7 @@ function ShellRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={BASENAME}>
       <WalletProvider>
         <RequireWallet>
           <Routes>

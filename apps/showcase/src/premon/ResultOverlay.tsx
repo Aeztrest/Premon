@@ -123,7 +123,7 @@ function ErrorState({ message, onClose }: { message: string | null; onClose: () 
           {message}
         </p>
       )}
-      <p className="text-xs text-ink-400">Make sure the wallet is running at <code>localhost:5180</code> and popups are allowed.</p>
+      <p className="text-xs text-ink-400">Make sure popups are allowed for this site, then try connecting again.</p>
       <button onClick={onClose} className="block mx-auto text-xs text-ink-400 hover:text-ink-900 pt-2">Close</button>
     </div>
   );
