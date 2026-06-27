@@ -134,18 +134,81 @@ function withFrom(tx: TxRequest, from: string): TxRequest {
   return { from, chainId: tx.chainId ?? MONAD_CHAIN_ID, ...tx };
 }
 
-/* ────────────── discovery ────────────── */
+/* ────────────── discovery (EIP-6963) ────────────── */
+
+interface Eip6963Detail {
+  info: { uuid: string; name: string; icon: string; rdns: string };
+  provider: Eip1193Provider;
+}
+
+/** rdns the Premon extension announces itself with (apps/extension inpage). */
+const PREMON_RDNS = "dev.premon.wallet";
 
 /**
- * Discover wallet providers available to the page. Premon is always advertised
- * (the adapter explains the missing-wallet case at connect time); an injected
- * EIP-1193 wallet is added when present, so the "without Premon" comparison
- * stands up.
+ * Synchronously collect EIP-6963 providers. Wallets respond to
+ * `eip6963:requestProvider` with a synchronous `eip6963:announceProvider`
+ * event, so dispatching + reading within the same tick captures them.
+ */
+function collectAnnounced(): Eip6963Detail[] {
+  if (typeof window === "undefined") return [];
+  const found = new Map<string, Eip6963Detail>();
+  const onAnnounce = (ev: Event) => {
+    const detail = (ev as CustomEvent<Eip6963Detail>).detail;
+    if (detail?.info?.uuid && detail.provider) found.set(detail.info.uuid, detail);
+  };
+  window.addEventListener("eip6963:announceProvider", onAnnounce as EventListener);
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+  window.removeEventListener("eip6963:announceProvider", onAnnounce as EventListener);
+  return [...found.values()];
+}
+
+/**
+ * Discover wallet providers available to the page.
+ *  - If the Premon EXTENSION is announced (EIP-6963), it's the primary
+ *    "Premon" provider and connects through its own approval UI — no separate
+ *    web-wallet tab.
+ *  - Otherwise we fall back to the popup web wallet at VITE_WALLET_URL.
+ *  - Every other announced/injected wallet becomes a "without Premon" option.
  */
 export function discoverEvmProviders(): EvmWalletProvider[] {
-  const out: EvmWalletProvider[] = [premonProvider()];
-  const injected = findInjectedProvider();
-  if (injected) out.push(injectedProvider(injected));
+  const announced = collectAnnounced();
+  const premonDetail = announced.find(
+    (d) => d.info.rdns === PREMON_RDNS || d.info.name?.toLowerCase() === "premon",
+  );
+
+  const out: EvmWalletProvider[] = [];
+
+  if (premonDetail) {
+    out.push(
+      injectedProvider(premonDetail.provider, {
+        name: "PREMON",
+        icon: PREMON_ICON,
+        premon: true,
+      }),
+    );
+  } else {
+    out.push(premonProvider());
+  }
+
+  for (const d of announced) {
+    if (d === premonDetail) continue;
+    out.push(injectedProvider(d.provider, { name: d.info.name, icon: d.info.icon, premon: false }));
+  }
+
+  // Legacy window.ethereum only when no EIP-6963 wallet announced at all.
+  if (announced.length === 0) {
+    const legacy = findInjectedProvider();
+    if (legacy) {
+      out.push(
+        injectedProvider(legacy, {
+          name: legacy.isMetaMask ? "MetaMask" : "Browser Wallet",
+          icon: METAMASK_ICON,
+          premon: false,
+        }),
+      );
+    }
+  }
+
   return out;
 }
 
@@ -197,12 +260,15 @@ function premonProvider(): EvmWalletProvider {
   };
 }
 
-function injectedProvider(eth: Eip1193Provider): EvmWalletProvider {
-  const name = eth.isMetaMask ? "MetaMask" : "Browser Wallet";
+function injectedProvider(
+  eth: Eip1193Provider,
+  opts: { name: string; icon: string; premon: boolean },
+): EvmWalletProvider {
+  const { name, icon, premon } = opts;
   return {
     name,
-    icon: METAMASK_ICON,
-    premon: false,
+    icon,
+    premon,
     async connect() {
       const accounts = (await eth.request({
         method: "eth_requestAccounts",
@@ -224,13 +290,20 @@ function injectedProvider(eth: Eip1193Provider): EvmWalletProvider {
       })) as string;
       return { txHash };
     },
-    async signTransaction() {
-      // Injected wallets generally don't expose eth_signTransaction; the x402
-      // payment leg needs Premon. Surface a clear error for the comparison path.
-      throw new WalletStandardBridgeError(
-        `${name} can't sign without broadcasting. Reconnect with Premon for x402 payments.`,
-        "NO_SIGN_TRANSACTION",
-      );
+    async signTransaction(tx) {
+      // Premon implements eth_signTransaction; other injected wallets usually
+      // don't, so the x402 payment leg needs Premon.
+      if (!premon) {
+        throw new WalletStandardBridgeError(
+          `${name} can't sign without broadcasting. Reconnect with Premon for x402 payments.`,
+          "NO_SIGN_TRANSACTION",
+        );
+      }
+      const signedTransaction = (await eth.request({
+        method: "eth_signTransaction",
+        params: [toEthSendParams(tx)],
+      })) as string;
+      return { signedTransaction };
     },
     async disconnect() {
       /* injected wallets manage their own session */
