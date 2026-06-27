@@ -1,0 +1,49 @@
+import type { AnalysisResult, GuardDecision } from "@premon/guard";
+
+const KEY = "premon.history.v1";
+const MAX_ENTRIES = 200;
+
+export interface HistoryEntry {
+  id: string;
+  createdAt: string;
+  /** Human-readable label, e.g. "Send 0.05 MON to 0xabc…7zN" */
+  label: string;
+  decision: GuardDecision;
+  /** Broadcast tx hash, or null when not broadcast. */
+  signature: string | null;
+  reasons: string[];
+  findings: AnalysisResult["riskFindings"];
+  estimatedChanges?: AnalysisResult["estimatedChanges"];
+  /** Was this transaction actually broadcast on-chain? */
+  broadcast: boolean;
+}
+
+export function readHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw) as HistoryEntry[];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeHistory(entries: HistoryEntry[]): void {
+  const trimmed = entries.slice(0, MAX_ENTRIES);
+  localStorage.setItem(KEY, JSON.stringify(trimmed));
+}
+
+export function appendHistory(entry: HistoryEntry): void {
+  const all = readHistory();
+  all.unshift(entry);
+  writeHistory(all);
+}
+
+export function clearHistory(): void {
+  localStorage.removeItem(KEY);
+}
+
+export function makeEntryId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile --prod=false",
+  "buildCommand": "pnpm --filter @premon/guard build && pnpm --filter @premon/wallet-adapter build && VITE_ANALYZE_URL=/api pnpm --filter @premon/showcase build",
+  "outputDirectory": "apps/showcase/dist",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://premon-api.onrender.com/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

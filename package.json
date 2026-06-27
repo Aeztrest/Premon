@@ -1,0 +1,14 @@
+{
+  "name": "premon",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "build": "pnpm --filter @premon/server build",
+    "build:server": "pnpm --filter @premon/server build",
+    "build:guard": "pnpm --filter @premon/guard build",
+    "dev": "pnpm --filter @premon/server dev",
+    "dev:server": "pnpm --filter @premon/server dev",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm --filter @premon/server test"
+  }
+}
