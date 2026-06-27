@@ -40,6 +40,7 @@ interface AnswerEntry {
   answer?: string;
   payer?: string;
   network?: string;
+  txHash?: string;
   paywall?: PaymentRequirements;
   error?: string;
   startedAt: number;
@@ -117,15 +118,16 @@ export default function Scrybe() {
       if (!requirements) throw new Error("Server didn't return PaymentRequirements.");
       update({ phase: "paywalled", paywall: requirements });
 
-      // 3 + 4. Build the USDC transfer and have the wallet sign it. Premon runs
-      // its pre-sign analysis on the payment leg here.
+      // 3 + 4. Build the USDC transfer and have the wallet sign + BROADCAST it.
+      // Premon runs its pre-sign analysis + policy on the payment here, then the
+      // transfer actually settles on-chain (real spend).
       update({ phase: "signing" });
       const tx = buildX402PaymentTx(walletAddress!, requirements);
-      const { signedTransaction } = await adapter.signTransaction(tx);
-      const headerValue = encodePaymentHeader(signedTransaction, requirements);
+      const { signature: txHash } = await adapter.signAndSendTransaction(tx);
+      const headerValue = encodePaymentHeader(txHash, walletAddress!, requirements);
 
-      // 5. Replay with the signed payload in X-PAYMENT
-      update({ phase: "settling" });
+      // 5. Replay with the on-chain payment proof in X-PAYMENT
+      update({ phase: "settling", txHash });
       const settled = await fetch(`/api/demo/scrybe?q=${encodeURIComponent(q)}`, {
         headers: {
           accept: "application/json",
@@ -140,6 +142,7 @@ export default function Scrybe() {
           answer: body.answer ?? "(empty answer)",
           payer: walletAddress!,
           network: body.network ?? requirements.network,
+          txHash: body.txHash ?? txHash,
           finishedAt: Date.now(),
         });
       } else {
@@ -299,6 +302,7 @@ function ConversationEntry({ entry }: { entry: AnswerEntry }) {
               <SettlementReceipt
                 payer={entry.payer}
                 network={entry.network}
+                txHash={entry.txHash}
                 elapsedMs={(entry.finishedAt ?? Date.now()) - entry.startedAt}
               />
             )}
@@ -354,9 +358,12 @@ function ProgressStep({ entry }: { entry: AnswerEntry }) {
   );
 }
 
-function SettlementReceipt({ payer, network, elapsedMs }: {
-  payer?: string; network?: string; elapsedMs: number;
+function SettlementReceipt({ payer, network, txHash, elapsedMs }: {
+  payer?: string; network?: string; txHash?: string; elapsedMs: number;
 }) {
+  const explorerTx = txHash
+    ? `https://testnet.monadexplorer.com/tx/${txHash}`
+    : null;
   return (
     <div className="mt-3 rounded-xl p-3 text-xs flex items-start gap-2 bg-emerald-50 border border-emerald-600/20">
       <ShieldCheck size={14} className="text-emerald-600 mt-0.5 shrink-0" />
@@ -368,6 +375,16 @@ function SettlementReceipt({ payer, network, elapsedMs }: {
           <p className="text-[10px] text-ink-900/40 mt-1 font-mono break-all">
             from {payer.slice(0, 10)}…{payer.slice(-6)}
           </p>
+        )}
+        {explorerTx && (
+          <a
+            href={explorerTx}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[10px] text-emerald-700 underline font-mono break-all mt-0.5 inline-block"
+          >
+            tx {txHash!.slice(0, 12)}… ↗
+          </a>
         )}
       </div>
     </div>
@@ -391,7 +408,7 @@ function HowItWorksDisclosure() {
             { n: "01", t: "Ask",     b: "Page requests the answer" },
             { n: "02", t: "402",     b: "Server demands USDC payment" },
             { n: "03", t: "Sign",    b: "Premon validates + signs" },
-            { n: "04", t: "Settle",  b: "Facilitator settles on Monad" },
+            { n: "04", t: "Settle",  b: "USDC transfer settles on Monad" },
           ].map((s) => (
             <div key={s.n} className="rounded-lg p-2.5 bg-bone border border-ink-900/8">
               <p className="text-[9px] text-brand-700 font-mono">{s.n}</p>

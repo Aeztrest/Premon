@@ -47,13 +47,22 @@ export function priceToAtomic(price: string, decimals: number): bigint {
   return parseUnits(clean, decimals);
 }
 
+/** Resolve the payment amount in atomic units from the requirements. */
+function requiredAtomic(requirements: PaymentRequirements): bigint {
+  const v = requirements.maxAmountRequired.trim();
+  // Server now sends atomic units (a plain integer string); fall back to a
+  // "$0.001"-style price for older servers.
+  if (/^[0-9]+$/.test(v)) return BigInt(v);
+  const decimals = Number(requirements.extra?.decimals ?? DEFAULT_USDC_DECIMALS);
+  return priceToAtomic(v, decimals);
+}
+
 /** Build the unsigned EVM USDC-transfer tx that satisfies the 402. */
 export function buildX402PaymentTx(
   from: string,
   requirements: PaymentRequirements,
 ): TxRequest {
-  const decimals = Number(requirements.extra?.decimals ?? DEFAULT_USDC_DECIMALS);
-  const amount = priceToAtomic(requirements.maxAmountRequired, decimals);
+  const amount = requiredAtomic(requirements);
   return {
     from,
     to: requirements.asset,
@@ -63,17 +72,23 @@ export function buildX402PaymentTx(
   };
 }
 
-/** Base64-encode the `X-PAYMENT` header value from a signed transaction. */
+/** Base64-encode the `X-PAYMENT` header value from the broadcast payment tx. */
 export function encodePaymentHeader(
-  signedTransaction: string,
+  txHash: string,
+  from: string,
   requirements: PaymentRequirements,
 ): string {
   const payload = {
     x402Version: 1,
     scheme: requirements.scheme,
     network: requirements.network,
-    payload: { transaction: signedTransaction },
-    accepted: requirements,
+    payload: {
+      txHash,
+      from,
+      asset: requirements.asset,
+      payTo: requirements.payTo,
+      amount: requiredAtomic(requirements).toString(),
+    },
   };
   return btoa(JSON.stringify(payload));
 }
