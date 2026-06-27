@@ -2,7 +2,7 @@
   "name": "@premon/guard",
   "version": "0.1.0",
   "description": "Premon pre-sign transaction guard SDK for Monad / EVM (chain-light, no ethers required to consume).",
-  "private": true,
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,11 +12,16 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "README.md"],
+  "keywords": ["monad", "evm", "ethereum", "wallet", "security", "transaction", "firewall", "x402", "premon"],
+  "homepage": "https://premon.vercel.app",
+  "repository": { "type": "git", "url": "git+https://github.com/Aeztrest/Premon.git", "directory": "packages/guard" },
+  "publishConfig": { "access": "public" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

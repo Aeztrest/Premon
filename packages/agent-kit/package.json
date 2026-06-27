@@ -2,6 +2,7 @@
   "name": "@premon/agent-kit",
   "version": "0.1.0",
   "description": "Guard your agent / program wallet with Premon: a drop-in ethers signer + CLI that runs every transaction through Premon's pre-sign firewall and refuses to sign what your policy blocks.",
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,11 +12,16 @@
   "bin": {
     "premon": "./dist/cli.js"
   },
-  "files": ["dist"],
+  "files": ["dist", "README.md"],
+  "keywords": ["monad", "evm", "ethereum", "agent", "ai-agent", "wallet", "security", "ethers", "signer", "premon"],
+  "homepage": "https://premon.vercel.app/agents",
+  "repository": { "type": "git", "url": "git+https://github.com/Aeztrest/Premon.git", "directory": "packages/agent-kit" },
+  "publishConfig": { "access": "public" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@premon/guard": "workspace:*",
