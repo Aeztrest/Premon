@@ -9,7 +9,7 @@ import type { RouteDeps } from "./types.js";
  */
 
 // Demo merchant (valid checksummed EOA, no code → safe ERC-20 recipient).
-const DEMO_PAYTO = "0x5CA1AB1E00000000000000000000000000000C0DE";
+const DEMO_PAYTO = "0x5CA1Ab1e0000000000000000000000000000c0de";
 // 0.001 USDC at 6 decimals.
 const DEMO_AMOUNT_ATOMIC = "1000";
 
