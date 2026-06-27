@@ -33,7 +33,7 @@ export const CHAINS: Record<MonadNetwork, ChainConfig> = {
     explorerUrl: "https://testnet.monadexplorer.com",
     nativeSymbol: "MON",
     nativeDecimals: 18,
-    usdcAddress: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea",
+    usdcAddress: "0x534b2f3A21130d7a60830c2Df862319e593943A3",
     usdcDecimals: 6,
     faucetUrl: "https://faucet.monad.xyz",
   },

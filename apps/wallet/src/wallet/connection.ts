@@ -49,7 +49,7 @@ export const FAUCET_URL = "https://faucet.monad.xyz";
 /** Configurable USDC token on Monad testnet (6 decimals). */
 export const USDC_TOKEN =
   (import.meta.env.VITE_USDC_ADDRESS as string | undefined) ??
-  "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
+  "0x534b2f3A21130d7a60830c2Df862319e593943A3";
 export const USDC_DECIMALS = 6;
 
 let provider: ethers.JsonRpcProvider | null = null;

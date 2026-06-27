@@ -6,19 +6,20 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { Send, Download, Droplet } from "lucide-react";
+import { Send, Download, Droplet, ChevronRight } from "lucide-react";
 import { formatEther } from "ethers";
 import { useRpc, useWalletState } from "../shared/state-context";
 import { chainFor } from "../shared/chain";
 import { ReceiveScreen } from "./ReceiveScreen";
 import { SendScreen } from "./SendScreen";
+import { TokenDetail } from "./TokenDetail";
 
 export function Home() {
   const state = useWalletState();
   const rpc = useRpc();
   const [balance, setBalance] = useState<number | null>(null);
   const [usdc, setUsdc] = useState<number | null>(null);
-  const [overlay, setOverlay] = useState<"send" | "receive" | null>(null);
+  const [overlay, setOverlay] = useState<"send" | "receive" | "token" | null>(null);
 
   const refreshBalance = useCallback(async () => {
     if (!state?.address) return;
@@ -62,8 +63,9 @@ export function Home() {
           <div style={{ borderTop: "1px solid var(--line)" }} />
           <BalanceRow
             asset="USDC"
-            hint="x402 payments"
+            hint="tap for contract + QR"
             value={usdc === null ? "0.0000" : usdc.toFixed(4)}
+            onClick={() => setOverlay("token")}
           />
         </div>
 
@@ -117,6 +119,15 @@ export function Home() {
           onSent={refreshBalance}
         />
       )}
+      {overlay === "token" && state?.network && (
+        <TokenDetail
+          symbol="USDC"
+          tokenAddress={chainFor(state.network).usdcAddress}
+          balance={usdc === null ? "0.0000" : usdc.toFixed(4)}
+          network={state.network}
+          onClose={() => setOverlay(null)}
+        />
+      )}
     </div>
   );
 }
@@ -126,16 +137,21 @@ function BalanceRow({
   hint,
   value,
   warn,
+  onClick,
 }: {
   asset: string;
   hint: string;
   value: string;
   warn?: boolean;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="flex items-baseline justify-between py-2.5">
-      <div className="flex flex-col">
-        <span className="text-sm font-bold leading-none">{asset}</span>
+  const inner = (
+    <>
+      <div className="flex flex-col items-start">
+        <span className="text-sm font-bold leading-none flex items-center gap-1">
+          {asset}
+          {onClick && <ChevronRight size={12} className="text-text-faint" />}
+        </span>
         <span className="text-text-faint text-[10px] mt-1">{hint}</span>
       </div>
       <span
@@ -144,8 +160,19 @@ function BalanceRow({
       >
         {value}
       </span>
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className="flex items-baseline justify-between py-2.5 -mx-2 px-2 rounded-input hover:bg-black/[0.04] transition-colors text-left w-[calc(100%+1rem)]"
+      >
+        {inner}
+      </button>
+    );
+  }
+  return <div className="flex items-baseline justify-between py-2.5">{inner}</div>;
 }
 
 function ActionButton({

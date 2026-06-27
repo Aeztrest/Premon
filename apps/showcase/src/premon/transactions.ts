@@ -41,7 +41,7 @@ const USDC_DECIMALS = 6;
 const addr = (prefix: string): string => "0x" + prefix.padEnd(40, "0");
 
 // USDC token contract (placeholder, Monad testnet).
-const USDC_TOKEN = "0xf817257fed379853cde0fa4f97ab987181b1e5ea";
+const USDC_TOKEN = "0x534b2f3A21130d7a60830c2Df862319e593943A3";
 
 // Synthetic contract / token addresses for danger scenarios. None of these are
 // on a known-safe allowlist, so the analyzer flags them as unknown exposure.

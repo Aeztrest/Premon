@@ -8,7 +8,7 @@ import { UINT256_MAX } from "../simulation/abi.js";
 const ERC20 = new Interface(["function approve(address spender, uint256 amount)"]);
 const USER = "0x1111111111111111111111111111111111111111";
 const SPENDER = "0x2222222222222222222222222222222222222222";
-const TOKEN = "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
+const TOKEN = "0x534b2f3A21130d7a60830c2Df862319e593943A3";
 
 class MockRpc implements MonadRpc {
   async getChainId() {

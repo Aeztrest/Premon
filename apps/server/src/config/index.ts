@@ -98,7 +98,7 @@ const EXPLORER_MAINNET = "https://monadexplorer.com";
 
 // USDC contract defaults. The testnet value is overridable via env because
 // testnet token deployments rotate; set MONAD_USDC_ADDRESS to be authoritative.
-const USDC_TESTNET = "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
+const USDC_TESTNET = "0x534b2f3A21130d7a60830c2Df862319e593943A3";
 const USDC_MAINNET = "0x0000000000000000000000000000000000000000";
 
 function chainIdFor(network: MonadNetwork): number {
