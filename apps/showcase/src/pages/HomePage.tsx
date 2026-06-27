@@ -1,5 +1,5 @@
 /**
- * Premon home — white-first landing with safety-orange + ink-black.
+ * Premon home — white-first landing with Monad-purple + ink-black.
  * Voice: construction-site safety for your signature. "Sign safe. Build on."
  */
 
@@ -9,7 +9,7 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import {
   Shield, ShieldCheck, ShieldAlert, Eye, Lock, Activity,
   ArrowRight, ArrowUpRight, AlertTriangle, CheckCircle2,
-  Wallet, Layers, Radar, BookOpen, Cpu, HardHat,
+  Wallet, Layers, Radar, BookOpen, Cpu,
   Network, FileSearch, BellRing, KeyRound, Gauge,
   XCircle,
 } from "lucide-react";
@@ -91,7 +91,7 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mt-7 text-lg sm:text-xl text-ink-500 max-w-xl leading-relaxed"
           >
-            Premon is the hard hat for your Monad wallet — every transaction is
+            Premon is transaction foresight for Monad — every transaction is
             simulated, explained in plain language, and blocked when dangerous,
             before your keys ever touch it.
           </motion.p>
@@ -157,7 +157,7 @@ function LiveAnalysisCard() {
       className="relative"
     >
       <div className="absolute -inset-6 rounded-[2rem] opacity-60 blur-2xl"
-           style={{ background: "radial-gradient(closest-side, rgba(255,107,0,0.18), transparent 70%)" }} />
+           style={{ background: "radial-gradient(closest-side, rgba(131, 110, 249,0.18), transparent 70%)" }} />
 
       {/* The analysis console renders dark — Premon's "inspection booth" inside the white page */}
       <div className="relative rounded-2xl overflow-hidden bg-ink-900 text-white shadow-lift">
@@ -208,11 +208,11 @@ function LiveAnalysisCard() {
                 className="flex items-start gap-3 p-3 rounded-xl border"
                 style={{
                   borderColor:
-                    f.sev === "danger" ? "rgba(255,107,0,0.45)" :
+                    f.sev === "danger" ? "rgba(131, 110, 249,0.45)" :
                     f.sev === "warn"   ? "rgba(255,171,110,0.30)" :
                                          "rgba(255,255,255,0.10)",
                   background:
-                    f.sev === "danger" ? "rgba(255,107,0,0.10)" :
+                    f.sev === "danger" ? "rgba(131, 110, 249,0.10)" :
                     f.sev === "warn"   ? "rgba(255,171,110,0.06)" :
                                          "rgba(255,255,255,0.03)",
                 }}
@@ -368,7 +368,7 @@ function ThreePillars() {
   return (
     <Section
       eyebrow="The product"
-      title="Three layers, one hard hat."
+      title="Three layers, one verdict."
       sub="A signing path that's fortified end-to-end. Each layer is independently useful — together they close the gap that lets drainers, drift, and silent agents win today."
       tone="bone"
     >
@@ -395,7 +395,7 @@ function PillarCard({ tag, icon: Icon, title, body, points, index }:
       <div
         aria-hidden
         className="absolute -top-24 -right-24 w-56 h-56 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{ background: "radial-gradient(closest-side, rgba(255,107,0,0.10), transparent 70%)" }}
+        style={{ background: "radial-gradient(closest-side, rgba(131, 110, 249,0.10), transparent 70%)" }}
       />
 
       <div className="relative">
@@ -489,7 +489,7 @@ function X402Section() {
         <div className="grid md:grid-cols-2">
           <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-ink-900/8 bg-bone">
             <div className="inline-flex items-center gap-2 text-xs font-bold text-ink-400 uppercase tracking-wider">
-              <Cpu size={12} /> Without a hard hat
+              <Cpu size={12} /> Without Premon
             </div>
             <p className="mt-4 font-display text-2xl font-bold leading-tight text-ink-700">
               An agent re-signs micro-payments<br /> while you sleep.
@@ -510,7 +510,7 @@ function X402Section() {
 
           <div className="p-8 md:p-10 bg-white">
             <div className="inline-flex items-center gap-2 text-xs font-bold text-brand-600 uppercase tracking-wider">
-              <HardHat size={13} /> With Premon
+              <Eye size={13} /> With Premon
             </div>
             <p className="mt-4 font-display text-2xl font-bold leading-tight">
               The agent gets a leash,<br /> a budget, and a kill switch.
@@ -585,9 +585,9 @@ function FinalCta() {
           }}
         />
         <div className="relative max-w-3xl p-12 md:p-20">
-          <HardHat size={26} className="text-brand-500" />
+          <Eye size={26} className="text-brand-500" />
           <h2 className="mt-6 font-display text-4xl md:text-6xl font-bold tracking-tight leading-[1.02]">
-            Hard hats on.<br /> <span className="text-brand-500">Sign with sight.</span>
+            See it coming.<br /> <span className="text-brand-500">Sign with sight.</span>
           </h2>
           <p className="mt-6 text-white/60 text-lg max-w-xl">
             Open the showcase, connect a wallet, and watch Premon refuse a wallet drainer in real time.

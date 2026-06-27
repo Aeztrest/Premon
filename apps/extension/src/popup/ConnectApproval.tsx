@@ -109,7 +109,7 @@ export function ConnectApproval() {
             type="checkbox"
             checked={remember}
             onChange={(e) => setRemember(e.target.checked)}
-            className="mt-0.5 accent-[#FF6B00]"
+            className="mt-0.5 accent-[#836EF9]"
           />
           <span className="text-xs leading-snug">
             <span className="text-text font-semibold">Trust this site for next time</span>

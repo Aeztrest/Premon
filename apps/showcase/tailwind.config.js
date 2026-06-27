@@ -11,16 +11,16 @@ export default {
       colors: {
         // Safety-orange brand scale
         brand: {
-          50:  "#FFF4EC",
-          100: "#FFE7D4",
-          200: "#FFCDA6",
-          300: "#FFAB6E",
-          400: "#FF8838",
-          500: "#FF6B00",
-          600: "#EA5E00",
-          700: "#C24E02",
-          800: "#993E06",
-          900: "#7C350A",
+          50:  "#F1EEFE",
+          100: "#E4DEFD",
+          200: "#C9BCFB",
+          300: "#AE9BF9",
+          400: "#9A84F9",
+          500: "#836EF9",
+          600: "#6E54F2",
+          700: "#5B40D6",
+          800: "#4A35AC",
+          900: "#200052",
         },
         // Ink (warm black) scale for text + dark surfaces
         ink: {
@@ -41,7 +41,7 @@ export default {
       boxShadow: {
         card:  "0 1px 2px rgba(20,20,20,0.05), 0 4px 16px -4px rgba(20,20,20,0.06)",
         lift:  "0 2px 4px rgba(20,20,20,0.06), 0 16px 40px -12px rgba(20,20,20,0.14)",
-        brand: "0 4px 14px -2px rgba(255,107,0,0.35)",
+        brand: "0 4px 14px -2px rgba(131, 110, 249,0.35)",
       },
       animation: {
         "spin-slow": "spin 3s linear infinite",

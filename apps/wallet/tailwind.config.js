@@ -17,9 +17,9 @@ export default {
         },
         // Safety-orange brand accent
         accent: {
-          DEFAULT: "#FF6B00",
-          soft: "#EA5E00",
-          dim: "rgba(255,107,0,0.10)",
+          DEFAULT: "#836EF9",
+          soft: "#6E54F2",
+          dim: "rgba(131, 110, 249,0.10)",
         },
         // Ink (warm black) scale for text + dark surfaces
         ink: {

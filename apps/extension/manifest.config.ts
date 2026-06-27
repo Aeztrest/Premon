@@ -17,7 +17,7 @@ export default defineManifest(({ mode }) => {
     short_name: "Premon",
     version: pkg.version,
     description:
-      "The hard hat for your Monad wallet — every transaction simulated, explained, and blocked when dangerous.",
+      "Transaction foresight for Monad — every transaction simulated, explained, and blocked when dangerous.",
 
     icons: {
       "16": "icons/16.png",

@@ -26,7 +26,7 @@ type ProviderEvent =
 
 const ICON_DATA_URL = (() => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-    <rect width="24" height="24" rx="6" fill="#FF6B00"/>
+    <rect width="24" height="24" rx="6" fill="#836EF9"/>
     <path d="M12 5L18 18H6Z" fill="#141414"/>
     <rect x="4" y="19" width="16" height="1.6" rx="0.8" fill="#141414"/>
   </svg>`;

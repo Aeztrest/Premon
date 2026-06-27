@@ -1,25 +1,19 @@
 /**
- * PREMON brand glyph.
- *
- * Authoritative SVG; never replaced by a raster. Stylized hard hat — orange
- * dome with a white center rib, resting on an orange brim. "The hard hat for
- * your Monad wallet."
- *
- * Renders in brand colors by default; pass `mono` to inherit `currentColor`.
+ * PREMON brand glyph — a foresight "eye": the firewall sees the transaction
+ * before you sign it. Renders in Monad purple (#836EF9) by default; pass `mono`
+ * to inherit `currentColor` (for tinted contexts).
  */
 
 import type { SVGProps } from "react";
 
 export interface MarkProps extends SVGProps<SVGSVGElement> {
   size?: number | string;
-  /** Render single-color using currentColor instead of brand orange/white. */
+  /** Render single-color using currentColor instead of Monad purple. */
   mono?: boolean;
 }
 
 export function Mark({ size = 24, mono = false, ...rest }: MarkProps) {
-  const dome = mono ? "currentColor" : "#FF6B00";
-  const rib = mono ? "var(--bg-elevated, #fff)" : "#FFFFFF";
-  const brim = mono ? "currentColor" : "#FF6B00";
+  const c = mono ? "currentColor" : "#836EF9";
   return (
     <svg
       width={size}
@@ -31,9 +25,13 @@ export function Mark({ size = 24, mono = false, ...rest }: MarkProps) {
       aria-label="PREMON"
       {...rest}
     >
-      <path d="M5 15.5a7 7 0 0 1 14 0Z" fill={dome} />
-      <rect x="10.8" y="6.2" width="2.4" height="4.6" rx="1.2" fill={rib} />
-      <rect x="3.2" y="16.2" width="17.6" height="2.4" rx="1.2" fill={brim} />
+      <path
+        d="M2 12c2.4-3.7 5.6-5.5 10-5.5S19.6 8.3 22 12c-2.4 3.7-5.6 5.5-10 5.5S4.4 15.7 2 12Z"
+        stroke={c}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" fill={c} />
     </svg>
   );
 }

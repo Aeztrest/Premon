@@ -504,7 +504,7 @@ function StepPolicy({
               onClick={() => onChoose(t.id)}
               className="w-full text-left p-4 rounded-card transition-colors"
               style={{
-                background: active ? "rgba(255,107,0,0.07)" : "rgba(20,20,20,0.03)",
+                background: active ? "rgba(131, 110, 249,0.07)" : "rgba(20,20,20,0.03)",
                 border: active ? "1px solid rgba(61,109,255,0.5)" : "1px solid var(--line)",
               }}
             >

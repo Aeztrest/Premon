@@ -47,12 +47,12 @@ export class ErrorBoundary extends Component<Props, State> {
       >
         <div
           className="max-w-2xl w-full rounded-2xl p-6 bg-white shadow-lift"
-          style={{ border: "1px solid rgba(255,107,0,0.4)" }}
+          style={{ border: "1px solid rgba(131, 110, 249,0.4)" }}
         >
           <div className="flex items-center gap-3 mb-4">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "rgba(255,107,0,0.12)", border: "1px solid rgba(255,107,0,0.4)" }}
+              style={{ background: "rgba(131, 110, 249,0.12)", border: "1px solid rgba(131, 110, 249,0.4)" }}
             >
               <AlertTriangle size={18} className="text-brand-600" />
             </div>

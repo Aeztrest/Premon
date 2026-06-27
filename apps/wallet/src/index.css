@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
- * Premon wallet — white-first, safety-orange + ink-black.
+ * Premon wallet — white-first, Monad-purple + ink-black.
  * Mirrors packages/ui/src/tokens.css.
  */
 
@@ -17,7 +17,7 @@
   *::-webkit-scrollbar-track { background: transparent; }
   *::-webkit-scrollbar-thumb { background: rgba(20,20,20,0.10); border-radius: 4px; }
   *::-webkit-scrollbar-thumb:hover { background: rgba(20,20,20,0.18); }
-  ::selection { background: rgba(255,107,0,0.25); }
+  ::selection { background: rgba(131, 110, 249,0.25); }
 }
 
 @layer components {
@@ -36,8 +36,8 @@
   }
   .btn-primary {
     @apply btn text-white;
-    background: linear-gradient(135deg, #FF6B00, #EA5E00);
-    box-shadow: 0 4px 14px -2px rgba(255, 107, 0, 0.30);
+    background: linear-gradient(135deg, #836EF9, #6E54F2);
+    box-shadow: 0 4px 14px -2px rgba(131, 110, 249, 0.30);
   }
   .btn-primary:hover { filter: brightness(1.05); }
   .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; filter: none; box-shadow: none; }
@@ -56,7 +56,7 @@
     @apply w-full px-3.5 py-2.5 rounded-xl bg-white text-ink-900 text-sm font-mono outline-none transition-colors;
     border: 1px solid rgba(20, 20, 20, 0.14);
   }
-  .input:focus { border-color: #FF6B00; }
+  .input:focus { border-color: #836EF9; }
   .input::placeholder { color: rgba(20, 20, 20, 0.30); }
   .label {
     @apply block text-[10px] uppercase tracking-wider text-ink-400 font-semibold mb-1.5;
@@ -69,6 +69,6 @@
   }
   /* Premon signature: hazard stripe (orange/ink diagonals) */
   .hazard {
-    background: repeating-linear-gradient(135deg, #141414 0 12px, #ff6b00 12px 24px);
+    background: repeating-linear-gradient(135deg, #141414 0 12px, #836EF9 12px 24px);
   }
 }

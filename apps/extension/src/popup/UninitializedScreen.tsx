@@ -62,7 +62,7 @@ export function UninitializedScreen() {
             <li key={line} className="flex items-start gap-2.5 text-xs text-text-muted">
               <span
                 className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-accent-soft"
-                style={{ background: "rgba(255,107,0,0.10)", border: "1px solid rgba(255,107,0,0.25)" }}
+                style={{ background: "rgba(131, 110, 249,0.10)", border: "1px solid rgba(131, 110, 249,0.25)" }}
               >
                 {i + 1}
               </span>

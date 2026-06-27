@@ -150,7 +150,7 @@ export function discoverEvmProviders(): EvmWalletProvider[] {
 }
 
 const PREMON_ICON = (() => {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#141414"/><path d="M8 19.5a8 8 0 0 1 16 0Z" fill="#FF6B00"/><rect x="14.6" y="9" width="2.8" height="5.2" rx="1.4" fill="#FFFFFF"/><rect x="6" y="20.4" width="20" height="2.6" rx="1.3" fill="#FF6B00"/></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#141414"/><path d="M6 16c3-4.7 7-7 10-7s7 2.3 10 7c-3 4.7-7 7-10 7s-7-2.3-10-7Z" fill="#FFFFFF"/><circle cx="16" cy="16" r="3.7" fill="#836EF9"/></svg>`;
   return `data:image/svg+xml;base64,${btoa(svg)}`;
 })();
 

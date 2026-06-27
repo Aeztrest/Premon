@@ -44,7 +44,7 @@
     @apply btn;
     background: var(--accent);
     color: #fff;
-    box-shadow: 0 4px 14px -2px rgba(255, 107, 0, 0.30);
+    box-shadow: 0 4px 14px -2px rgba(131, 110, 249, 0.30);
   }
   .btn-primary:hover { background: var(--accent-soft); }
   .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; filter: none; box-shadow: none; }
@@ -93,7 +93,7 @@
 
   /* Premon signature: hazard stripe (orange/ink diagonals) */
   .hazard {
-    background: repeating-linear-gradient(135deg, #141414 0 12px, #ff6b00 12px 24px);
+    background: repeating-linear-gradient(135deg, #141414 0 12px, #836EF9 12px 24px);
   }
 
   .pill {

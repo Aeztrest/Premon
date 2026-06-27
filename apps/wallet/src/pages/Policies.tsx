@@ -219,7 +219,7 @@ function PolicyToggle({ title, help, value, onChange }: { title: string; help: s
       </div>
       <button onClick={() => onChange(!value)}
         className="relative w-10 h-5 rounded-full transition-colors shrink-0"
-        style={{ background: value ? "#FF6B00" : "rgba(20,20,20,0.14)" }}>
+        style={{ background: value ? "#836EF9" : "rgba(20,20,20,0.14)" }}>
         <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform"
           style={{ transform: value ? "translateX(21px)" : "translateX(2px)" }} />
       </button>

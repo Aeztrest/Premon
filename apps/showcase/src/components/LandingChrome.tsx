@@ -1,7 +1,7 @@
 /**
  * Premon brand chrome — logo mark, header, footer, light backdrop.
  *
- * Identity: "Premon" = hard hat. White-first surfaces, safety-orange (#FF6B00)
+ * Identity: "Premon" = transaction foresight. White-first surfaces, Monad purple (#836EF9)
  * accents, ink-black (#141414) type. Signature motif: the hazard stripe.
  */
 
@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, Github, Menu, X as XIcon } from "lucide-react";
 
-export const SOCIAL_GITHUB = "https://github.com/Aeztrest/DeltaProtokol";
+export const SOCIAL_GITHUB = "https://github.com/Aeztrest/Premon";
 export const SOCIAL_X      = "https://x.com/premonxyz";
 
 const NAV_LINKS = [
@@ -19,14 +19,16 @@ const NAV_LINKS = [
   { label: "Install",   to: "/install" },
 ];
 
-/** The Premon hard-hat mark. Ink tile, orange dome + brim, white rib. */
+/** The Premon foresight mark: an eye on an ink tile — the firewall sees the tx. */
 export function PremonMark({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
       <rect width="32" height="32" rx="8" fill="#141414" />
-      <path d="M8 19.5a8 8 0 0 1 16 0Z" fill="#FF6B00" />
-      <rect x="14.6" y="9" width="2.8" height="5.2" rx="1.4" fill="#FFFFFF" />
-      <rect x="6" y="20.4" width="20" height="2.6" rx="1.3" fill="#FF6B00" />
+      <path
+        d="M6 16c3-4.7 7-7 10-7s7 2.3 10 7c-3 4.7-7 7-10 7s-7-2.3-10-7Z"
+        fill="#FFFFFF"
+      />
+      <circle cx="16" cy="16" r="3.7" fill="#836EF9" />
     </svg>
   );
 }
@@ -63,7 +65,7 @@ export function BackdropGrid() {
       />
       <div
         className="absolute -top-48 left-1/2 -translate-x-1/2 w-[1000px] h-[1000px] rounded-full"
-        style={{ background: "radial-gradient(closest-side, rgba(255,107,0,0.10), transparent 70%)" }}
+        style={{ background: "radial-gradient(closest-side, rgba(131, 110, 249,0.10), transparent 70%)" }}
       />
     </div>
   );
@@ -181,7 +183,7 @@ export function LandingFooter() {
               <p className="font-display font-bold tracking-[0.14em] text-sm">
                 PREMON<span className="text-brand-500">.</span>
               </p>
-              <p className="text-xs text-white/45 mt-0.5">The hard hat for your Monad wallet.</p>
+              <p className="text-xs text-white/45 mt-0.5">Transaction foresight for Monad.</p>
             </div>
           </div>
 
@@ -216,7 +218,7 @@ export function LandingFooter() {
         </div>
 
         <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-[11px] text-white/40">
-          <p>© {new Date().getFullYear()} Premon. Built for the Colosseum hackathon.</p>
+          <p>© {new Date().getFullYear()} Premon. Built for the Monad hackathon.</p>
           <p className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" /> Testnet · MIT licensed
           </p>

@@ -51,7 +51,7 @@ export function Onboarding() {
       {/* Top progress bar */}
       <div className="border-b border-ink-900/[0.06]">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-2.5">
-          <svg width={28} height={28} viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#141414"/><path d="M8 19.5a8 8 0 0 1 16 0Z" fill="#FF6B00"/><rect x="14.6" y="9" width="2.8" height="5.2" rx="1.4" fill="#FFFFFF"/><rect x="6" y="20.4" width="20" height="2.6" rx="1.3" fill="#FF6B00"/></svg>
+          <svg width={28} height={28} viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#141414"/><path d="M6 16c3-4.7 7-7 10-7s7 2.3 10 7c-3 4.7-7 7-10 7s-7-2.3-10-7Z" fill="#FFFFFF"/><circle cx="16" cy="16" r="3.7" fill="#836EF9"/></svg>
           <span className="font-display font-bold text-sm text-ink-900 tracking-tight">Premon Wallet</span>
           <div className="flex-1" />
           <div className="flex items-center gap-1">
@@ -59,7 +59,7 @@ export function Onboarding() {
               <div
                 key={i}
                 className="h-1 w-8 rounded-full transition-colors"
-                style={{ background: i <= stepIndex ? "#FF6B00" : "rgba(20,20,20,0.08)" }}
+                style={{ background: i <= stepIndex ? "#836EF9" : "rgba(20,20,20,0.08)" }}
               />
             ))}
           </div>
@@ -139,7 +139,7 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
       <div className="p-8 text-center space-y-8">
       <div className="space-y-4">
         <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center">
-          <svg width={64} height={64} viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#141414"/><path d="M8 19.5a8 8 0 0 1 16 0Z" fill="#FF6B00"/><rect x="14.6" y="9" width="2.8" height="5.2" rx="1.4" fill="#FFFFFF"/><rect x="6" y="20.4" width="20" height="2.6" rx="1.3" fill="#FF6B00"/></svg>
+          <svg width={64} height={64} viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#141414"/><path d="M6 16c3-4.7 7-7 10-7s7 2.3 10 7c-3 4.7-7 7-10 7s-7-2.3-10-7Z" fill="#FFFFFF"/><circle cx="16" cy="16" r="3.7" fill="#836EF9"/></svg>
         </div>
         <h1 className="text-3xl font-display font-bold text-ink-900">A wallet that protects you<br />before you sign.</h1>
         <p className="text-ink-500 max-w-md mx-auto leading-relaxed">
@@ -353,8 +353,8 @@ function PolicyStep(props: {
             <button key={t.id} onClick={() => props.onSelect(t.id)}
               className="w-full text-left p-4 rounded-xl transition-colors"
               style={{
-                background: active ? "rgba(255,107,0,0.08)" : "rgba(20,20,20,0.02)",
-                border: active ? "1px solid rgba(255,107,0,0.45)" : "1px solid rgba(20,20,20,0.08)",
+                background: active ? "rgba(131, 110, 249,0.08)" : "rgba(20,20,20,0.02)",
+                border: active ? "1px solid rgba(131, 110, 249,0.45)" : "1px solid rgba(20,20,20,0.08)",
               }}>
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold text-ink-900">{t.name}</span>

@@ -10,7 +10,7 @@ import {
   Shield, ShieldCheck, ShieldAlert, ArrowRight, ArrowUpRight,
   AlertTriangle, Wallet, Sparkles, Radar, Activity, BookOpen,
   ArrowLeftRight, Image as ImageIcon, TrendingUp, Gift, Rocket,
-  CircleCheck, Eye, Network, Layers, HardHat, Gauge,
+  CircleCheck, Eye, Network, Layers, Gauge,
 } from "lucide-react";
 import { BackdropGrid, LandingHeader, LandingFooter, HazardRule } from "./LandingChrome";
 
@@ -427,7 +427,7 @@ function SiteCard({ site }: { site: SiteSpec }) {
           className="pointer-events-none absolute inset-0 transition-opacity duration-300"
           style={{
             opacity: over ? 1 : 0,
-            background: `radial-gradient(360px circle at ${pos.x}px ${pos.y}px, rgba(255,107,0,0.07), transparent 50%)`,
+            background: `radial-gradient(360px circle at ${pos.x}px ${pos.y}px, rgba(131, 110, 249,0.07), transparent 50%)`,
           }}
         />
 
@@ -631,7 +631,7 @@ function FinalCta() {
         />
         <div className="relative max-w-3xl p-12 md:p-20">
           <div className="flex items-center gap-2 text-brand-400 text-sm">
-            <HardHat size={15} /> <span>For the jury, the engineer, the user who's been rugged before.</span>
+            <Eye size={15} /> <span>For the jury, the engineer, the user who's been rugged before.</span>
           </div>
           <h2 className="mt-6 font-display text-4xl md:text-6xl font-bold tracking-tight leading-[1.02]">
             Pick a card.<br /> <span className="text-brand-500">See the firewall fire.</span>

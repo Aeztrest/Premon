@@ -60,7 +60,7 @@ export default function DocsPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              href={`https://github.com/Aeztrest/DeltaProtokol/blob/main/docs/${d.file}`}
+              href={`https://github.com/Aeztrest/Premon/blob/main/docs/${d.file}`}
               target="_blank"
               rel="noreferrer"
               className="group card-hover block p-5"

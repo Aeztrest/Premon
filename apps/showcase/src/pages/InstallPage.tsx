@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   Download, Chrome, Globe2, ShieldCheck, Sparkles, Lock, Cpu, Eye,
   Check, ChevronRight, ArrowRight, MonitorSmartphone, FileArchive,
-  FolderOpen, BookOpen, HardHat,
+  FolderOpen, BookOpen,
 } from "lucide-react";
 import { BackdropGrid, LandingHeader, LandingFooter, HazardRule } from "../components/LandingChrome";
 
@@ -92,7 +92,7 @@ function Hero({ browserCopy }: { browserCopy: string }) {
         transition={{ duration: 0.65, delay: 0.05 }}
         className="mt-6 font-display text-5xl sm:text-6xl lg:text-7xl font-bold tracking-[-0.03em] leading-[1.0]"
       >
-        Hard hat on,
+        Eyes open,
         <br />
         <span className="text-brand-500">in under a minute.</span>
       </motion.h1>
@@ -345,7 +345,7 @@ function AfterInstallCta() {
       />
       <div className="relative max-w-2xl p-10 md:p-14">
         <div className="inline-flex items-center gap-2 text-[12px] text-brand-400">
-          <HardHat size={14} /> After install
+          <Eye size={14} /> After install
         </div>
         <h2 className="mt-4 font-display text-3xl md:text-5xl font-bold tracking-tight leading-[1.05]">
           Take it for a spin in the showcase.

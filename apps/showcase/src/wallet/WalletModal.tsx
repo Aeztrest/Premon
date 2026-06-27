@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
-  HardHat,
+  Eye,
   Zap,
   Loader2,
   Download,
@@ -99,13 +99,13 @@ export function WalletModal({
                   disabled={connecting}
                   className="w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all hover:bg-brand-50 disabled:opacity-60"
                   style={{
-                    background: "rgba(255,107,0,0.06)",
-                    border: "1px solid rgba(255,107,0,0.45)",
+                    background: "rgba(131, 110, 249,0.06)",
+                    border: "1px solid rgba(131, 110, 249,0.45)",
                   }}
                 >
                   <WalletIcon
                     icon={premon.icon}
-                    fallback={<HardHat size={16} className="text-white" />}
+                    fallback={<Eye size={16} className="text-white" />}
                     variant="primary"
                   />
                   <div className="flex-1">
@@ -183,12 +183,12 @@ function PremonMissing({ othersCount }: { othersCount: number }) {
       <div
         className="rounded-xl p-4"
         style={{
-          background: "rgba(255,107,0,0.06)",
-          border: "1px solid rgba(255,107,0,0.45)",
+          background: "rgba(131, 110, 249,0.06)",
+          border: "1px solid rgba(131, 110, 249,0.45)",
         }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <HardHat size={14} className="text-brand-600" />
+          <Eye size={14} className="text-brand-600" />
           <p className="text-sm font-bold text-ink-900">
             Premon not detected
           </p>
@@ -279,7 +279,7 @@ function WalletIcon({
         borderRadius: radius,
         background:
           variant === "primary"
-            ? "linear-gradient(135deg,#FF6B00,#C24E02)"
+            ? "linear-gradient(135deg,#836EF9,#5B40D6)"
             : "rgba(20,20,20,0.06)",
       }}
     >

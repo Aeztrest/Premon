@@ -50,7 +50,7 @@ function Awaiting() {
   return (
     <div className="space-y-4">
       <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center"
-        style={{ background: "rgba(255,107,0,0.10)", border: "1px solid rgba(255,107,0,0.35)" }}>
+        style={{ background: "rgba(131, 110, 249,0.10)", border: "1px solid rgba(131, 110, 249,0.35)" }}>
         <Loader2 size={22} className="animate-spin text-brand-500" />
       </div>
       <div>
@@ -91,7 +91,7 @@ function Blocked({ message, onClose }: { message: string | null; onClose: () => 
   return (
     <div className="space-y-4">
       <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center"
-        style={{ background: "rgba(255,107,0,0.10)", border: "1px solid rgba(255,107,0,0.40)" }}>
+        style={{ background: "rgba(131, 110, 249,0.10)", border: "1px solid rgba(131, 110, 249,0.40)" }}>
         <ShieldX size={24} className="text-brand-600" />
       </div>
       <div>
