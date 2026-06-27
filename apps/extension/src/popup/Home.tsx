@@ -6,9 +6,10 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { Send, Download } from "lucide-react";
+import { Send, Download, Droplet } from "lucide-react";
 import { formatEther } from "ethers";
 import { useRpc, useWalletState } from "../shared/state-context";
+import { chainFor } from "../shared/chain";
 import { ReceiveScreen } from "./ReceiveScreen";
 import { SendScreen } from "./SendScreen";
 
@@ -66,7 +67,7 @@ export function Home() {
           />
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-2">
+        <div className="mt-5 grid grid-cols-3 gap-2">
           <ActionButton
             icon={Send}
             label="Send"
@@ -76,6 +77,15 @@ export function Home() {
             icon={Download}
             label="Receive"
             onClick={() => setOverlay("receive")}
+          />
+          <ActionButton
+            icon={Droplet}
+            label="Faucet"
+            onClick={
+              state?.network && chainFor(state.network).faucetUrl
+                ? () => window.open(chainFor(state.network).faucetUrl, "_blank", "noopener")
+                : undefined
+            }
           />
         </div>
       </section>

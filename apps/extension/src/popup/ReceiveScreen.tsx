@@ -6,8 +6,10 @@
  */
 
 import { useEffect, useState } from "react";
-import { X, Copy, Check } from "lucide-react";
+import { X, Copy, Check, Droplet } from "lucide-react";
 import QRCode from "qrcode";
+import type { MonadNetwork } from "@premon/ext-protocol";
+import { chainFor } from "../shared/chain";
 
 interface Props {
   address: string;
@@ -18,6 +20,7 @@ interface Props {
 export function ReceiveScreen({ address, network, onClose }: Props) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const chain = chainFor(network as MonadNetwork);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +28,7 @@ export function ReceiveScreen({ address, network, onClose }: Props) {
       errorCorrectionLevel: "M",
       margin: 1,
       width: 224,
-      color: { dark: "#FFFFFF", light: "#00000000" },
+      color: { dark: "#141414", light: "#00000000" },
     }).then((url) => { if (!cancelled) setQrDataUrl(url); })
       .catch(() => { /* leave null; address still copyable */ });
     return () => { cancelled = true; };
@@ -81,6 +84,24 @@ export function ReceiveScreen({ address, network, onClose }: Props) {
             <p className="text-[10px] text-ok mt-1.5">Copied to clipboard</p>
           )}
         </div>
+
+        {chain.faucetUrl && (
+          <div className="w-full">
+            <a
+              href={chain.faucetUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-input text-sm font-semibold text-white"
+              style={{ background: "var(--accent)" }}
+            >
+              <Droplet size={14} /> Get testnet {chain.nativeSymbol}
+            </a>
+            <p className="text-[10px] text-text-faint text-center mt-1.5 max-w-[260px] mx-auto">
+              No programmatic faucet — copy your address above, then paste it into
+              the faucet to receive testnet {chain.nativeSymbol}.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

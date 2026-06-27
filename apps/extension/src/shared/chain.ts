@@ -20,6 +20,8 @@ export interface ChainConfig {
   /** USDC ERC-20 token address (0x). */
   usdcAddress: string;
   usdcDecimals: number;
+  /** Public testnet faucet URL ("" when none, e.g. mainnet). */
+  faucetUrl: string;
 }
 
 export const CHAINS: Record<MonadNetwork, ChainConfig> = {
@@ -33,6 +35,7 @@ export const CHAINS: Record<MonadNetwork, ChainConfig> = {
     nativeDecimals: 18,
     usdcAddress: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea",
     usdcDecimals: 6,
+    faucetUrl: "https://faucet.monad.xyz",
   },
   mainnet: {
     network: "mainnet",
@@ -44,6 +47,7 @@ export const CHAINS: Record<MonadNetwork, ChainConfig> = {
     nativeDecimals: 18,
     usdcAddress: "0x0000000000000000000000000000000000000000",
     usdcDecimals: 6,
+    faucetUrl: "",
   },
 };
 
