@@ -1,0 +1,29 @@
+{
+  "name": "@premon/agent-kit",
+  "version": "0.1.0",
+  "description": "Guard your agent / program wallet with Premon: a drop-in ethers signer + CLI that runs every transaction through Premon's pre-sign firewall and refuses to sign what your policy blocks.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
+  "bin": {
+    "premon": "./dist/cli.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@premon/guard": "workspace:*",
+    "ethers": "^6.13.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

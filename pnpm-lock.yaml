@@ -243,6 +243,25 @@ importers:
         specifier: ^0.22.0
         version: 0.22.0(rollup@4.62.2)(vite@6.4.3(@types/node@22.20.0)(jiti@1.21.7)(tsx@4.22.4))
 
+  packages/agent-kit:
+    dependencies:
+      '@premon/guard':
+        specifier: workspace:*
+        version: link:../guard
+      ethers:
+        specifier: ^6.13.4
+        version: 6.17.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.0)
+
   packages/ext-protocol:
     devDependencies:
       typescript:
